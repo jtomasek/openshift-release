@@ -81,7 +81,6 @@ operator:
   - pullspec: quay.io/openshift/origin-kube-rbac-proxy:latest
     with: pipeline:proxy-operand
 promotion:
-  disabled: true
   name: "4.13"
   namespace: ocp
 releases:
@@ -127,6 +126,10 @@ tests:
       TEST_SUITE: openshift/csi
       TRUECONDITIONS: GCPFilestoreDriverControllerServiceControllerAvailable GCPFilestoreDriverNodeServiceControllerAvailable
     workflow: openshift-e2e-gcp-csi-filestore
+- as: verify-deps
+  steps:
+    test:
+    - ref: go-verify-deps
 zz_generated_metadata:
   branch: release-4.13
   org: openshift

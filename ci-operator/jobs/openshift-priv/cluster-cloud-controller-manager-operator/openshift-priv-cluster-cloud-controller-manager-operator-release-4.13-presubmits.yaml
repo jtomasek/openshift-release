@@ -334,7 +334,7 @@ presubmits:
           secretName: result-aggregator
     trigger: (?m)^/test( | .* )e2e-aws-ovn-upgrade,?($|\s.*)
   - agent: kubernetes
-    always_run: true
+    always_run: false
     branches:
     - ^release-4\.13$
     - ^release-4\.13-
@@ -355,6 +355,7 @@ presubmits:
     optional: true
     path_alias: github.com/openshift/cluster-cloud-controller-manager-operator
     rerun_command: /test e2e-azure-ovn
+    skip_if_only_changed: ^docs/|\.md$|^(?:.*/)?(?:\.gitignore|OWNERS|PROJECT|LICENSE)$
     spec:
       containers:
       - args:
@@ -417,7 +418,7 @@ presubmits:
           secretName: result-aggregator
     trigger: (?m)^/test( | .* )e2e-azure-ovn,?($|\s.*)
   - agent: kubernetes
-    always_run: true
+    always_run: false
     branches:
     - ^release-4\.13$
     - ^release-4\.13-
@@ -438,6 +439,7 @@ presubmits:
     optional: true
     path_alias: github.com/openshift/cluster-cloud-controller-manager-operator
     rerun_command: /test e2e-azure-ovn-ccm
+    skip_if_only_changed: ^docs/|\.md$|^(?:.*/)?(?:\.gitignore|OWNERS|PROJECT|LICENSE)$
     spec:
       containers:
       - args:
@@ -500,12 +502,12 @@ presubmits:
           secretName: result-aggregator
     trigger: (?m)^/test( | .* )e2e-azure-ovn-ccm,?($|\s.*)
   - agent: kubernetes
-    always_run: true
+    always_run: false
     branches:
     - ^release-4\.13$
     - ^release-4\.13-
     cluster: build03
-    context: ci/prow/e2e-azure-ovn-ccm-install
+    context: ci/prow/e2e-azure-ovn-techpreveiew
     decorate: true
     decoration_config:
       oauth_token_secret:
@@ -517,10 +519,11 @@ presubmits:
       ci-operator.openshift.io/cloud-cluster-profile: azure4
       ci.openshift.io/generator: prowgen
       pj-rehearse.openshift.io/can-be-rehearsed: "true"
-    name: pull-ci-openshift-priv-cluster-cloud-controller-manager-operator-release-4.13-e2e-azure-ovn-ccm-install
+    name: pull-ci-openshift-priv-cluster-cloud-controller-manager-operator-release-4.13-e2e-azure-ovn-techpreveiew
     optional: true
     path_alias: github.com/openshift/cluster-cloud-controller-manager-operator
-    rerun_command: /test e2e-azure-ovn-ccm-install
+    rerun_command: /test e2e-azure-ovn-techpreveiew
+    skip_if_only_changed: ^docs/|\.md$|^(?:.*/)?(?:\.gitignore|OWNERS|PROJECT|LICENSE)$
     spec:
       containers:
       - args:
@@ -530,8 +533,8 @@ presubmits:
         - --oauth-token-path=/usr/local/github-credentials/oauth
         - --report-credentials-file=/etc/report/credentials
         - --secret-dir=/secrets/ci-pull-credentials
-        - --secret-dir=/usr/local/e2e-azure-ovn-ccm-install-cluster-profile
-        - --target=e2e-azure-ovn-ccm-install
+        - --secret-dir=/usr/local/e2e-azure-ovn-techpreveiew-cluster-profile
+        - --target=e2e-azure-ovn-techpreveiew
         command:
         - ci-operator
         image: ci-operator:latest
@@ -547,7 +550,7 @@ presubmits:
         - mountPath: /secrets/ci-pull-credentials
           name: ci-pull-credentials
           readOnly: true
-        - mountPath: /usr/local/e2e-azure-ovn-ccm-install-cluster-profile
+        - mountPath: /usr/local/e2e-azure-ovn-techpreveiew-cluster-profile
           name: cluster-profile
         - mountPath: /secrets/gcs
           name: gcs-credentials
@@ -581,9 +584,9 @@ presubmits:
       - name: result-aggregator
         secret:
           secretName: result-aggregator
-    trigger: (?m)^/test( | .* )e2e-azure-ovn-ccm-install,?($|\s.*)
+    trigger: (?m)^/test( | .* )e2e-azure-ovn-techpreveiew,?($|\s.*)
   - agent: kubernetes
-    always_run: true
+    always_run: false
     branches:
     - ^release-4\.13$
     - ^release-4\.13-
@@ -604,6 +607,7 @@ presubmits:
     optional: true
     path_alias: github.com/openshift/cluster-cloud-controller-manager-operator
     rerun_command: /test e2e-azure-ovn-upgrade
+    skip_if_only_changed: ^docs/|\.md$|^(?:.*/)?(?:\.gitignore|OWNERS|PROJECT|LICENSE)$
     spec:
       containers:
       - args:
@@ -670,7 +674,7 @@ presubmits:
     branches:
     - ^release-4\.13$
     - ^release-4\.13-
-    cluster: build02
+    cluster: build04
     context: ci/prow/e2e-gcp-ovn-ccm
     decorate: true
     decoration_config:
@@ -758,8 +762,8 @@ presubmits:
     branches:
     - ^release-4\.13$
     - ^release-4\.13-
-    cluster: build02
-    context: ci/prow/e2e-gcp-ovn-ccm-install
+    cluster: build04
+    context: ci/prow/e2e-gcp-ovn-techpreveiew
     decorate: true
     decoration_config:
       oauth_token_secret:
@@ -771,10 +775,10 @@ presubmits:
       ci-operator.openshift.io/cloud-cluster-profile: gcp
       ci.openshift.io/generator: prowgen
       pj-rehearse.openshift.io/can-be-rehearsed: "true"
-    name: pull-ci-openshift-priv-cluster-cloud-controller-manager-operator-release-4.13-e2e-gcp-ovn-ccm-install
+    name: pull-ci-openshift-priv-cluster-cloud-controller-manager-operator-release-4.13-e2e-gcp-ovn-techpreveiew
     optional: true
     path_alias: github.com/openshift/cluster-cloud-controller-manager-operator
-    rerun_command: /test e2e-gcp-ovn-ccm-install
+    rerun_command: /test e2e-gcp-ovn-techpreveiew
     skip_if_only_changed: ^docs/|\.md$|^(?:.*/)?(?:\.gitignore|OWNERS|PROJECT|LICENSE)$
     spec:
       containers:
@@ -785,8 +789,8 @@ presubmits:
         - --oauth-token-path=/usr/local/github-credentials/oauth
         - --report-credentials-file=/etc/report/credentials
         - --secret-dir=/secrets/ci-pull-credentials
-        - --secret-dir=/usr/local/e2e-gcp-ovn-ccm-install-cluster-profile
-        - --target=e2e-gcp-ovn-ccm-install
+        - --secret-dir=/usr/local/e2e-gcp-ovn-techpreveiew-cluster-profile
+        - --target=e2e-gcp-ovn-techpreveiew
         command:
         - ci-operator
         image: ci-operator:latest
@@ -802,7 +806,7 @@ presubmits:
         - mountPath: /secrets/ci-pull-credentials
           name: ci-pull-credentials
           readOnly: true
-        - mountPath: /usr/local/e2e-gcp-ovn-ccm-install-cluster-profile
+        - mountPath: /usr/local/e2e-gcp-ovn-techpreveiew-cluster-profile
           name: cluster-profile
         - mountPath: /secrets/gcs
           name: gcs-credentials
@@ -840,7 +844,7 @@ presubmits:
       - name: result-aggregator
         secret:
           secretName: result-aggregator
-    trigger: (?m)^/test( | .* )e2e-gcp-ovn-ccm-install,?($|\s.*)
+    trigger: (?m)^/test( | .* )e2e-gcp-ovn-techpreveiew,?($|\s.*)
   - agent: kubernetes
     always_run: false
     branches:
@@ -927,7 +931,7 @@ presubmits:
           secretName: result-aggregator
     trigger: (?m)^/test( | .* )e2e-nutanix-ovn,?($|\s.*)
   - agent: kubernetes
-    always_run: true
+    always_run: false
     branches:
     - ^release-4\.13$
     - ^release-4\.13-
@@ -948,6 +952,7 @@ presubmits:
     optional: true
     path_alias: github.com/openshift/cluster-cloud-controller-manager-operator
     rerun_command: /test e2e-openstack-ovn
+    skip_if_only_changed: ^docs/|\.md$|^(?:.*/)?(?:\.gitignore|OWNERS|PROJECT|LICENSE)$
     spec:
       containers:
       - args:

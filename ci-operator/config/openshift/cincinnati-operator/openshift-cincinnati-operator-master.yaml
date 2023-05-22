@@ -31,6 +31,11 @@ resources:
       cpu: 100m
       memory: 200Mi
 tests:
+- as: gofmt
+  commands: go fmt ./... && git diff --exit-code
+  container:
+    from: src
+  run_if_changed: \.go$
 - as: unit
   commands: make unit-test
   container:
@@ -49,7 +54,7 @@ tests:
       cli: latest
       commands: |
         make func-test \
-        RELATED_IMAGE_OPERAND=quay.io/app-sre/cincinnati@sha256:921b7a2e579d4cfe0e58ecf3abcc2262b321b6d0f8be7f6ebcb700acfca5ba55 \
+        RELATED_IMAGE_OPERAND=registry.redhat.io/openshift-update-service/openshift-update-service-rhel8@sha256:0e67daa2313ac7695b53de468ca0a540988befe1dfa5c9036eb05e21fd9f107a \
         OPENSHIFT_BUILD_NAMESPACE=
       dependencies:
       - env: OPERATOR_IMAGE

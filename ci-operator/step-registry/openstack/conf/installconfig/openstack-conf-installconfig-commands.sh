@@ -11,7 +11,6 @@ OPENSTACK_EXTERNAL_NETWORK="${OPENSTACK_EXTERNAL_NETWORK:-$(<"${SHARED_DIR}/OPEN
 OPENSTACK_CONTROLPLANE_FLAVOR="${OPENSTACK_CONTROLPLANE_FLAVOR:-$(<"${SHARED_DIR}/OPENSTACK_CONTROLPLANE_FLAVOR")}"
 OPENSTACK_COMPUTE_FLAVOR="${OPENSTACK_COMPUTE_FLAVOR:-$(<"${SHARED_DIR}/OPENSTACK_COMPUTE_FLAVOR")}"
 ZONES="${ZONES:-$(<"${SHARED_DIR}/ZONES")}"
-ZONES_COUNT="${ZONES_COUNT:-0}"
 WORKER_REPLICAS="${WORKER_REPLICAS:-3}"
 
 API_IP=$(<"${SHARED_DIR}/API_IP")
@@ -21,19 +20,7 @@ PULL_SECRET=$(<"${CLUSTER_PROFILE_DIR}/pull-secret")
 SSH_PUB_KEY=$(<"${CLUSTER_PROFILE_DIR}/ssh-publickey")
 
 IFS=' ' read -ra ZONES <<< "$ZONES"
-MAX_ZONES_COUNT=${#ZONES[@]}
-
-if [ "${ZONES_COUNT}" -gt 1 ]; then
-	# For now, we only support a cluster within a single AZ.
-	# This will change in the future.
-	echo "Wrong ZONE_COUNT: can only be 0 or 1, got ${ZONES_COUNT}"
-	exit 1
-fi
-if [ "${ZONES_COUNT}" -gt "${MAX_ZONES_COUNT}" ]; then
-	echo "Too many zones were requested: ${ZONES_COUNT}; only ${MAX_ZONES_COUNT} are available: ${ZONES[*]}"
-	exit 1
-fi
-
+ZONES_COUNT=${#ZONES[@]}
 ZONES_JSON="$(echo -n "${ZONES[@]:0:${ZONES_COUNT}}" | jq -cRs '(. / " ")')"
 echo "OpenStack Availability Zones: '${ZONES_JSON}'"
 
@@ -73,10 +60,10 @@ case "$CONFIG_TYPE" in
 			| .platform.openstack.externalDNS = [\"1.1.1.1\", \"1.0.0.1\"]
 			| .platform.openstack.externalNetwork = \"${OPENSTACK_EXTERNAL_NETWORK}\"
 			| .platform.openstack.ingressFloatingIP = \"${INGRESS_IP}\"
-			| .platform.openstack.lbFloatingIP = \"${API_IP}\"
+			| .platform.openstack.apiFloatingIP = \"${API_IP}\"
 		" "$INSTALL_CONFIG"
 		;;
-	proxy)
+	proxy*)
 		yq --yaml-output --in-place ".
 			| .networking.machineNetwork[0].cidr = \"$(<"${SHARED_DIR}"/MACHINES_SUBNET_RANGE)\"
 			| .platform.openstack.apiVIP = \"${API_IP}\"
@@ -93,6 +80,13 @@ case "$CONFIG_TYPE" in
 				| .additionalTrustBundle = \"$(<"${SHARED_DIR}/domain.crt")\"
 			" "$INSTALL_CONFIG"
 		fi
+
+		if [[ -f "${SHARED_DIR}/LB_HOST" ]]; then
+    			yq --yaml-output --in-place ".
+    			    | .platform.openstack.loadBalancer.type = \"UserManaged\"
+    			    | .featureSet = \"TechPreviewNoUpgrade\"
+    			" "$INSTALL_CONFIG"
+		fi
 		;;
 	*)
 		echo "No valid install config type specified. Please check CONFIG_TYPE"
@@ -107,6 +101,13 @@ if [[ "${ZONES_COUNT}" -gt '0' ]]; then
 		| .compute[0].platform.openstack.rootVolume.type = \"tripleo\"
 		| .compute[0].platform.openstack.rootVolume.size = 30
 		| .compute[0].platform.openstack.rootVolume.zones = ${ZONES_JSON}
+	" "$INSTALL_CONFIG"
+fi
+
+if [[ -f "${SHARED_DIR}/failure_domain.json" ]]; then
+	yq --yaml-output --in-place ".
+		| .controlPlane.platform.openstack += $(<"${SHARED_DIR}/failure_domain.json")
+		| .featureSet = \"TechPreviewNoUpgrade\"
 	" "$INSTALL_CONFIG"
 fi
 
@@ -149,15 +150,3 @@ if "proxy" in data:
     data["proxy"] = "redacted"
 print(yaml.dump(data))
 ' "$INSTALL_CONFIG" > "${ARTIFACT_DIR}/install-config.yaml"
-
-# Remove the ports created in openstack-provision-machinesubnet-commands.sh
-# since the installer will create them again, based on install-config.yaml.
-if [[ ${OPENSTACK_PROVIDER_NETWORK} != "" ]]; then
-	echo "Provider network detected: cleaning up reserved ports"
-	for p in api ingress; do
-		if openstack port show "${CLUSTER_NAME}-${CONFIG_TYPE}-${p}" >/dev/null; then
-			echo "Port exists for ${CLUSTER_NAME}-${CONFIG_TYPE}-${p}: removing it"
-			openstack port delete "${CLUSTER_NAME}-${CONFIG_TYPE}-${p}"
-		fi
-	done
-fi

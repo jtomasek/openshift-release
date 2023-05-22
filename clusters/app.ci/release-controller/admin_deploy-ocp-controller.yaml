@@ -82,6 +82,9 @@ rules:
   - list
   - watch
   - create
+  - delete
+  - update
+  - patch
 - apiGroups:
   - ''
   resources:
@@ -133,6 +136,7 @@ rules:
   - '4.11'
   - '4.12'
   - '4.13'
+  - '4.14'
   - '4.2'
   - '4.3'
   - '4.4'
@@ -143,6 +147,7 @@ rules:
   - '4.9'
   - scos-4.12
   - scos-4.13
+  - scos-4.14
   resources:
   - imagestreams
   verbs:
@@ -160,6 +165,9 @@ rules:
   - list
   - watch
   - create
+  - delete
+  - update
+  - patch
 ---
 #---------------------------------------------------------------------------------
 # art_namespaces_rbac.py added the following resource
@@ -379,5 +387,22 @@ apiVersion: v1
 kind: ServiceAccount
 metadata:
   annotations: {}
+  name: release-controller-ocp
+  namespace: ci
+---
+#---------------------------------------------------------------------------------
+# art_namespaces_rbac.py added the following resource
+#---------------------------------------------------------------------------------
+
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRoleBinding
+metadata:
+  name: release-controller-ocp
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: ClusterRole
+  name: release-controller
+subjects:
+- kind: ServiceAccount
   name: release-controller-ocp
   namespace: ci

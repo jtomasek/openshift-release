@@ -10,7 +10,7 @@ base_images:
   golangci-lint:
     name: golangci-lint
     namespace: ci
-    tag: v1.45.2
+    tag: v1.48.0
   os:
     name: centos
     namespace: origin
@@ -58,8 +58,8 @@ images:
       as:
       - registry.ci.openshift.org/ci/nginx-unprivileged:stable
   to: gh-pull-through-cache
-- context_dir: images/quayio-pull-through-cache/
-  to: quayio-pull-through-cache
+- context_dir: images/envoyproxy/
+  to: envoyproxy
 - context_dir: images/dptp-3312-hypershift-leaks-cleaner/
   to: dptp-3312-hypershift-leaks-cleaner
 - context_dir: images/cvp-trigger/

@@ -88,7 +88,7 @@ tests:
       IMAGE_REPO: multicluster-observability-operator
       REGISTRY_ORG: stolostron
     workflow: ocm-ci-image-mirror
-- as: pr-image-mirror-bac-query-proxy
+- as: pr-image-mirror-rbac-query-proxy
   steps:
     dependencies:
       SOURCE_IMAGE_REF: rbac-query-proxy
@@ -123,7 +123,7 @@ tests:
 - as: test-unit
   commands: |
     export SELF="make"
-    make unit-tests
+    VERBOSE="-v" make unit-tests
   container:
     from: src
 - as: e2e-kind
@@ -171,7 +171,7 @@ tests:
     dependencies:
       COMPONENT_IMAGE_REF: multicluster-observability-operator
     env:
-      ACM_RELEASE_VERSION: release-2.7
+      ACM_RELEASE_VERSION: release-2.8
       CLUSTERPOOL_GROUP_NAME: Core-Services
       CLUSTERPOOL_HOST_NAMESPACE: acm-observability-usa
       CLUSTERPOOL_HOST_PROW_KUBE_SECRET: ocm-obs-usa-clusterpool

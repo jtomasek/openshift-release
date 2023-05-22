@@ -1,4 +1,3 @@
-
 def add_imagestream_namespace_rbac(gendoc):
     resources = gendoc
     context = gendoc.context
@@ -92,7 +91,10 @@ def add_imagestream_namespace_rbac(gendoc):
                 'verbs': ['get',
                           'list',
                           'watch',
-                          'create']
+                          'create',
+                          'delete',
+                          'update',
+                          'patch']
             },
             {
                 'apiGroups': [''],
@@ -131,7 +133,8 @@ def add_imagestream_namespace_rbac(gendoc):
                     'resourceNames': ['release',
                                       *context.config.releases,
                                       'scos-4.12',
-                                      'scos-4.13'],
+                                      'scos-4.13',
+                                      'scos-4.14'],
                     'resources': ['imagestreams'],
                     'verbs': ['get', 'list', 'watch', 'update', 'patch']
                 },
@@ -141,7 +144,10 @@ def add_imagestream_namespace_rbac(gendoc):
                     'verbs': ['get',
                               'list',
                               'watch',
-                              'create']
+                              'create',
+                              'delete',
+                              'update',
+                              'patch']
                 }
             ]
         })
@@ -385,3 +391,23 @@ def add_imagestream_namespace_rbac(gendoc):
                 'namespace': context.config.rc_deployment_namespace
             }]
         })
+
+    resources.append(
+        {
+            'apiVersion': 'rbac.authorization.k8s.io/v1',
+            'kind': 'ClusterRoleBinding',
+            'metadata': {
+                'name': f'release-controller-ocp{context.suffix}',
+            },
+            'roleRef': {
+                'apiGroup': 'rbac.authorization.k8s.io',
+                'kind': 'ClusterRole',
+                'name': 'release-controller'
+            },
+            'subjects': [{
+                'kind': 'ServiceAccount',
+                'name': context.rc_serviceaccount_name,
+                'namespace': context.config.rc_deployment_namespace
+            }]
+        }
+    )

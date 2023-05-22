@@ -50,8 +50,6 @@ tests:
   minimum_interval: 72h
   steps:
     cluster_profile: openstack-vh-mecha-central
-    env:
-      OPENSTACK_TEST_SKIPS: \[sig-installer\]\[Suite:openshift\/openstack\]\[lb\]
     workflow: openshift-e2e-openstack-proxy
 - as: e2e-openstack-nfv-intel
   minimum_interval: 72h
@@ -84,15 +82,6 @@ tests:
   steps:
     cluster_profile: openstack-vh-mecha-central
     workflow: openshift-e2e-openstack-csi-manila
-- as: e2e-openstack-az
-  minimum_interval: 48h
-  steps:
-    cluster_profile: openstack-vh-mecha-az0
-    env:
-      OPENSTACK_TEST_SKIPS: \[sig-installer\]\[Suite:openshift\/openstack\]\[lb\]
-      TEST_SKIPS: In-tree Volumes
-      ZONES_COUNT: "1"
-    workflow: openshift-e2e-openstack-proxy
 - as: e2e-openstack-csi-cinder
   minimum_interval: 72h
   steps:
@@ -151,7 +140,8 @@ tests:
   steps:
     cluster_profile: openstack-vexxhost
     env:
-      APPLICATION_CREDENTIALS: "true"
+      OPENSTACK_AUTHENTICATION_METHOD: application-credentials
+      ROTATE_CLOUD_CREDENTIALS: "true"
       TEST_SKIPS: 'In-tree Volumes \[Driver: cinder\]'
     workflow: openshift-e2e-openstack-ipi
 zz_generated_metadata:

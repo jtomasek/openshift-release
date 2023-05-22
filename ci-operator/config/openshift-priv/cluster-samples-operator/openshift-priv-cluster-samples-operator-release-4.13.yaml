@@ -18,7 +18,6 @@ images:
       - registry.ci.openshift.org/ocp/builder:rhel-8-golang-1.19-openshift-4.13
   to: cluster-samples-operator
 promotion:
-  disabled: true
   name: 4.13-priv
   namespace: ocp-private
 releases:
@@ -65,7 +64,7 @@ tests:
         requests:
           cpu: 100m
     workflow: ipi-aws
-- as: e2e-aws-builds
+- as: e2e-aws-ovn-builds
   run_if_changed: ^(tmp/build)
   steps:
     cluster_profile: aws
@@ -76,7 +75,7 @@ tests:
   steps:
     cluster_profile: aws
     workflow: openshift-e2e-aws-proxy
-- as: e2e-aws-jenkins
+- as: e2e-aws-ovn-jenkins
   run_if_changed: ^(tmp/build)
   steps:
     cluster_profile: aws
@@ -86,7 +85,7 @@ tests:
   steps:
     cluster_profile: aws
     workflow: openshift-e2e-aws-image-ecosystem
-- as: e2e-aws-upgrade
+- as: e2e-aws-ovn-upgrade
   skip_if_only_changed: ^docs/|\.md$|^(?:.*/)?(?:\.gitignore|OWNERS|PROJECT|LICENSE)$
   steps:
     cluster_profile: aws

@@ -1,10 +1,19 @@
+base_images:
+  stolostron_builder_nodejs14-linux:
+    name: builder
+    namespace: stolostron
+    tag: nodejs16-linux
 build_root:
   image_stream_tag:
     name: builder
     namespace: stolostron
-    tag: nodejs14-linux
+    tag: nodejs16-linux
 images:
 - dockerfile_path: Dockerfile
+  inputs:
+    stolostron_builder_nodejs16-linux:
+      as:
+      - registry.ci.openshift.org/stolostron/builder:nodejs16-linux
   to: cluster-templates-console-plugin
 promotion:
   name: latest
@@ -17,6 +26,16 @@ resources:
       cpu: 100m
       memory: 200Mi
 tests:
+- as: lint
+  steps:
+    test:
+    - as: lint
+      commands: yarn install && yarn run lint
+      from: src
+      resources:
+        requests:
+          cpu: 100m
+          memory: 200Mi
 - as: pr-merge-image-mirror
   postsubmit: true
   steps:

@@ -6,15 +6,17 @@ build_root:
 images:
 - dockerfile_path: Dockerfile
   to: redhat-appstudio-jvm-build-service-image
-- dockerfile_path: Dockerfile.cache-in-ci
+- context_dir: java-components
+  dockerfile_path: cache/src/main/docker/Dockerfile.all-in-one
   to: redhat-appstudio-jvm-build-service-cache-image
-- dockerfile_path: Dockerfile.reqprocessor-in-ci
+- context_dir: java-components
+  dockerfile_path: build-request-processor/src/main/docker/Dockerfile.all-in-one
   to: redhat-appstudio-jvm-build-service-reqprocessor-image
 releases:
   latest:
     release:
       architecture: amd64
-      channel: stable
+      channel: fast
       version: "4.11"
 resources:
   '*':
@@ -24,6 +26,23 @@ resources:
       cpu: 100m
       memory: 200Mi
 tests:
+- as: jvm-build-service-e2e
+  cluster_claim:
+    architecture: amd64
+    cloud: aws
+    owner: openshift-ci
+    product: ocp
+    timeout: 1h0m0s
+    version: "4.11"
+  skip_if_only_changed: ^docs/|^\.github/|^\.tekton/|\.md$|^(?:.*/)?(?:\.gitignore|OWNERS|PROJECT|LICENSE)$
+  steps:
+    dependencies:
+      CI_JBS_CACHE_IMAGE: redhat-appstudio-jvm-build-service-cache-image
+      CI_JBS_REQPROCESSOR_IMAGE: redhat-appstudio-jvm-build-service-reqprocessor-image
+      COMPONENT_IMAGE: redhat-appstudio-jvm-build-service-image
+    test:
+    - ref: redhat-appstudio-e2e
+    workflow: redhat-appstudio-claim
 - as: jvm-build-service-in-repo-e2e
   cluster_claim:
     architecture: amd64

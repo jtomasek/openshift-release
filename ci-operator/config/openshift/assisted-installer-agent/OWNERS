@@ -13,7 +13,6 @@ filters:
     - eliorerz
     - eranco74
     - filanov
-    - flaper87
     - gamli75
     - jhernand
     - mkowalski
@@ -24,7 +23,6 @@ filters:
     - paul-maidment
     - rccrdpccl
     - romfreiman
-    - slaviered
     - tsorya
     - vrutkovs
     reviewers:
@@ -34,7 +32,6 @@ filters:
     - eliorerz
     - eranco74
     - filanov
-    - flaper87
     - gamli75
     - jhernand
     - mkowalski
@@ -45,10 +42,22 @@ filters:
     - paul-maidment
     - rccrdpccl
     - romfreiman
-    - slaviered
     - tsorya
     - vrutkovs
-  ^Dockerfile\..*:
+  ^Dockerfile\.(?!ocp).*:
     labels:
     - downstream-change-needed
+  ^Dockerfile\.ocp:
+    approvers:
+    - andfasano
+    - bfournie
+    - pawanpinjarkar
+    - rwsu
+    - zaneb
+    reviewers:
+    - andfasano
+    - bfournie
+    - pawanpinjarkar
+    - rwsu
+    - zaneb
 options: {}

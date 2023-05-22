@@ -8,3 +8,12 @@ ref:
       memory: 100Mi
   documentation: |-
     This step execute tempest tests on the deployed openstack.
+  env:
+  - name: TEMPEST_REGEX
+    default: ""
+    documentation: |-
+      Regular expression to be used by jobs that needs to run tempest tests
+  - name: TEMPEST_CONF_OVERRIDES
+    default: ""
+    documentation: |-
+      Options to be used in the job, that should be overriden in the tempest config. Options should be passed as a space separated string of 'section.key value' format.

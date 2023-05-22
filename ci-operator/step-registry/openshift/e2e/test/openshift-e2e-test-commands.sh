@@ -11,6 +11,11 @@ export ALIBABA_CLOUD_CREDENTIALS_FILE=${SHARED_DIR}/alibabacreds.ini
 export HOME=/tmp/home
 export PATH=/usr/libexec/origin:$PATH
 
+LOKI_SSO_CLIENT_ID="$(cat /var/run/loki-secret/client-id | base64 -w 0)"
+export LOKI_SSO_CLIENT_ID
+LOKI_SSO_CLIENT_SECRET="$(cat /var/run/loki-secret/client-secret | base64 -w 0)"
+export LOKI_SSO_CLIENT_SECRET
+
 # HACK: HyperShift clusters use their own profile type, but the cluster type
 # underneath is actually AWS and the type identifier is derived from the profile
 # type. For now, just treat the `hypershift` type the same as `aws` until
@@ -395,27 +400,48 @@ oc wait clusteroperators --all --for=condition=Progressing=false --timeout=10m
 echo "$(date) - all clusteroperators are done progressing."
 
 # this works around a problem where tests fail because imagestreams aren't imported.  We see this happen for exec session.
-echo "$(date) - waiting for non-samples imagesteams to import..."
-count=0
+count=1
 while :
 do
-  non_imported_imagestreams=$(oc -n openshift get imagestreams -o go-template='{{range .items}}{{$namespace := .metadata.namespace}}{{$name := .metadata.name}}{{range .status.tags}}{{if not .items}}{{$namespace}}/{{$name}}:{{.tag}}{{"\n"}}{{end}}{{end}}{{end}}')
-  if [ -z "${non_imported_imagestreams}" ]
-  then
-    break
-  fi
-  echo "The following image streams are yet to be imported (attempt #${count}):"
-  echo "${non_imported_imagestreams}"
+  echo "[$(date)] waiting for non-samples imagesteams to import..."
+  wait_count=1
+  while :
+  do
+    non_imported_imagestreams=$(oc -n openshift get imagestreams -o go-template='{{range .items}}{{$namespace := .metadata.namespace}}{{$name := .metadata.name}}{{range .status.tags}}{{if not .items}}{{$namespace}}/{{$name}}:{{.tag}}{{"\n"}}{{end}}{{end}}{{end}}')
+    if [ -z "${non_imported_imagestreams}" ]
+    then
+      break 2 # break from outer loop
+    fi
+    echo "[$(date)] The following image streams are yet to be imported (attempt #${wait_count}):"
+    echo "${non_imported_imagestreams}"
 
+    wait_count=$((wait_count+1))
+    if (( wait_count > 10 )); then
+        break
+    fi
+
+    sleep 60
+  done
+
+  # Given up after 3 rounds of waiting 10 minutes
   count=$((count+1))
-  if (( count > 20 )); then
-    echo "Failed while waiting on imagestream import"
-    exit 1
+  if (( count > 3 )); then
+      echo "[$(date)] Failed to import all image streams after 30 minutes"
+      echo $non_imported_imagestreams
+      exit 1
   fi
 
-  sleep 60
+  # image streams won't retry by themselves https://issues.redhat.com/browse/RFE-3660
+  set +e
+  for imagestream in $non_imported_imagestreams
+  do
+      echo "[$(date)] Retrying image import $imagestream"
+      oc import-image -n "$(echo "$imagestream" | cut -d/ -f1)" "$(echo "$imagestream" | cut -d/ -f2)"
+  done
+  set -e
 done
-echo "$(date) - all imagestreams are imported."
+
+echo "[$(date)] All imagestreams are imported."
 
 case "${TEST_TYPE}" in
 upgrade-conformance)

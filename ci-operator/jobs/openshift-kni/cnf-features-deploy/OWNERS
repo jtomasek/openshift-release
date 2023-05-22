@@ -12,8 +12,10 @@ filters:
     - imiller0
     - schseba
     - yuvalk
+    - zeeke
     reviewers:
     - aneeshkp
+    - bartwensley
     - fedepaol
     - ffromani
     - ijolliffe
@@ -25,8 +27,8 @@ filters:
     - marioferh
     - marsik
     - missxiaoguo
-    - mmirecki
     - nishant-parekh
+    - sakhoury
     - schseba
     - serngawy
     - simon3z
@@ -36,4 +38,5 @@ filters:
     - vladikr
     - yanirq
     - yuvalk
+    - zeeke
 options: {}

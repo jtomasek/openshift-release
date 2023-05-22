@@ -13,6 +13,8 @@ SSH_PKEY=~/key
 cp $SSH_PKEY_PATH $SSH_PKEY
 chmod 600 $SSH_PKEY
 
+source $SHARED_DIR/main.env
+
 if [[ ! -e ${SHARED_DIR}/cluster_name ]]; then
     echo "Cluster doesn't exist, job failed"
     exit 1
@@ -22,3 +24,6 @@ fi
 IFS=- read -r CLUSTER_NAME CLUSTER_API_IP CLUSTER_API_PORT CLUSTER_ENV <<< $(cat ${SHARED_DIR}/cluster_name)
 echo "Releasing cluster $CLUSTER_NAME"
 ansible-playbook -i $SHARED_DIR/bastion_inventory $SHARED_DIR/release-cluster.yml -vvvv
+if [[ "$T5_JOB_TRIGGER" != "rehearse" ]] && [[ "$T5CI_JOB_TYPE" == "origintests" ]]; then
+    ansible-playbook -i $SHARED_DIR/inventory $SHARED_DIR/destroy-cluster.yml -vv
+fi

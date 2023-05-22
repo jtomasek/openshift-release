@@ -6,6 +6,7 @@
 
 approvers:
 - aaradhak
+- adam0brien
 - ashcrow
 - bgilbert
 - c4rt0
@@ -22,11 +23,11 @@ approvers:
 - prestist
 - ravanelli
 - rishabhsaini
-- sohankunkerkar
 - travier
 options: {}
 reviewers:
 - aaradhak
+- adam0brien
 - ashcrow
 - bgilbert
 - c4rt0
@@ -43,5 +44,4 @@ reviewers:
 - prestist
 - ravanelli
 - rishabhsaini
-- sohankunkerkar
 - travier

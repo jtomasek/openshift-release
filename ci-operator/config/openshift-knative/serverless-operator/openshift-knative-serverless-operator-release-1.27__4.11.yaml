@@ -98,12 +98,12 @@ images:
   from: opm
   to: serverless-index
 promotion:
-  name: openshift-serverless-v1.27.0
+  name: openshift-serverless-v1.27.1
   namespace: knative
 releases:
   latest:
     release:
-      channel: stable
+      channel: fast
       version: "4.11"
 resources:
   '*':

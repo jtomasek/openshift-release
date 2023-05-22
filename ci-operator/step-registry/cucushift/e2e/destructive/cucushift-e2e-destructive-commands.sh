@@ -29,9 +29,14 @@ set +x
 
 # only exit 0 if junit result has no failures
 echo "Summarizing test result..."
-failures=$(grep '<testsuite failures="[1-9].*"' "${ARTIFACT_DIR}" -r | wc -l || true)
+mapfile -t test_suite_failures < <(grep -r -E 'testsuite.*failures="[1-9][0-9]*"' "${ARTIFACT_DIR}" | grep -o -E 'failures="[0-9]+"' | sed -E 's/failures="([0-9]+)"/\1/')
+failures=0
+for (( i=0; i<${#test_suite_failures[@]}; ++i ))
+do
+    let failures+=${test_suite_failures[$i]}
+done
 if [ $((failures)) == 0 ]; then
     echo "All tests have passed"
 else
-    echo "There are ${failures} test failures"
+    echo "There are ${failures} test failures in cucushift-e2e" | tee -a "${SHARED_DIR}/cucushift-e2e-failures"
 fi

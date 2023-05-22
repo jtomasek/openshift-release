@@ -39,6 +39,7 @@ approvers:
 - mfojtik
 - miciah
 - mrunalp
+- pacevedom
 - patrickdillon
 - runcom
 - russellb
@@ -53,7 +54,6 @@ approvers:
 - spadgett
 - stbenjam
 - stevekuznetsov
-- sttts
 - sudhaponnaganti
 - tjungblu
 - tremes
@@ -94,6 +94,7 @@ reviewers:
 - mfojtik
 - miciah
 - mrunalp
+- pacevedom
 - patrickdillon
 - runcom
 - russellb
@@ -108,7 +109,6 @@ reviewers:
 - spadgett
 - stbenjam
 - stevekuznetsov
-- sttts
 - sudhaponnaganti
 - tjungblu
 - tremes

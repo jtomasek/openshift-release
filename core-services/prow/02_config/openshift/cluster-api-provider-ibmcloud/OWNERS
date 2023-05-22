@@ -5,12 +5,15 @@
 # See the OWNERS docs: https://git.k8s.io/community/contributors/guide/owners.md
 
 approvers:
+- damdo
 - joelspeed
+- mkumatag
 options: {}
 reviewers:
 - damdo
 - elmiko
 - joelspeed
-- lobziik
+- karthik-k-n
+- mkumatag
 - odvarkadaniel
 - radekmanak

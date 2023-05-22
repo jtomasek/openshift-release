@@ -55,7 +55,7 @@
               severity: 'critical',
             },
             annotations: {
-              message: 'plank jobs {{ $labels.job_name }} with infra-internal role has failures. Check on <https://deck-internal-ci.apps.ci.l2s4.p1.openshiftapps.com/?job={{ $labels.job_name }}|deck-internal>.',
+              message: 'plank jobs {{ $labels.job_name }} with infra-internal role has failures. Check on <https://deck-internal-ci.apps.ci.l2s4.p1.openshiftapps.com/?job={{ $labels.job_name }}|deck-internal>. See <https://github.com/openshift/release/blob/master/docs/dptp-triage-sop/infrastructure-jobs.md#{{ $labels.job_name}}|SOP>.',
             },
           }
         ],
@@ -168,11 +168,11 @@
             expr: |||
              (
                sum(
-                 rate(prowjob_state_transitions{job="prow-controller-manager",job_name=~".*-images",org="openshift-priv",state="success"}[12h])
+                 rate(prowjob_state_transitions{job="prow-controller-manager",job_name=~"branch-ci-.*-images",org="openshift-priv",state="success"}[12h])
                )
                /
                sum(
-                 rate(prowjob_state_transitions{job="prow-controller-manager",job_name=~".*-images",org="openshift-priv",state=~"success|failure|aborted"}[12h])
+                 rate(prowjob_state_transitions{job="prow-controller-manager",job_name=~"branch-ci-.*-images",org="openshift-priv",state=~"success|failure|aborted"}[12h])
                )
              )
              < 0.90
@@ -182,25 +182,25 @@
               severity: 'critical',
             },
             annotations: {
-              message: 'openshift-priv image-building jobs are failing at a high rate. Check on <https://deck-internal-ci.apps.ci.l2s4.p1.openshiftapps.com/?job=*-images|deck-internal>. See <https://github.com/openshift/release/blob/master/docs/dptp-triage-sop/openshift-priv-image-building-jobs.md|SOP>.',
+              message: 'openshift-priv image-building jobs are failing at a high rate. Check on <https://deck-internal-ci.apps.ci.l2s4.p1.openshiftapps.com/?job=branch-ci-*-images|deck-internal>. See <https://github.com/openshift/release/blob/master/docs/dptp-triage-sop/openshift-priv-image-building-jobs.md|SOP>.',
             },
           }
         ],
       },
       {
-        name: 'pod-scaler-admission-memory-warning',
+        name: 'pod-scaler-admission-resource-warning',
         rules: [
           {
-            alert: 'pod-scaler-admission-memory-warning',
+            alert: 'pod-scaler-admission-resource-warning',
             expr: |||
-             sum by (workload_name, workload_type, determined_memory, configured_memory) (increase(pod_scaler_admission_high_determined_memory{workload_type!~"undefined|build"}[5m])) > 0
+             sum by (workload_name, workload_type, determined_amount, configured_amount, resource_type) (increase(pod_scaler_admission_high_determined_resource{workload_type!~"undefined|build"}[5m])) > 0
             |||,
             'for': '1m',
             labels: {
               severity: 'critical',
             },
             annotations: {
-              message: 'Workload {{ $labels.workload_name }} ({{ $labels.workload_type }}) used 10x more than configured amount of memory (actual: {{ $labels.determined_memory }}, configured: {{ $labels.configured_memory }}. See <https://github.com/openshift/release/blob/master/docs/dptp-triage-sop/pod-scaler-admission.md|SOP>.',
+              message: 'Workload {{ $labels.workload_name }} ({{ $labels.workload_type }}) used 10x more than configured amount of {{ $labels.resource_type }} (actual: {{ $labels.determined_amount }}, configured: {{ $labels.configured_amount }}. See <https://github.com/openshift/release/blob/master/docs/dptp-triage-sop/pod-scaler-admission.md|SOP>.',
             },
           }
         ],

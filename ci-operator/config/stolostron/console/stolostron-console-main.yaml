@@ -38,12 +38,18 @@ resources:
       cpu: 400m
       memory: 2Gi
 tests:
-- as: lint-check-unittests-sonarcloud
+- as: check
   commands: |
     export SELF="make -f Makefile.prow"
     make -f Makefile.prow install
-    make -f Makefile.prow lint
     make -f Makefile.prow check
+  container:
+    from: src
+- as: unit-tests-sonarcloud
+  commands: |
+    export SELF="make -f Makefile.prow"
+    make -f Makefile.prow install
+    make -f Makefile.prow sonar/js/jest-init
     make -f Makefile.prow unit-tests
     make -f Makefile.prow sonar/js/prow
   container:
@@ -55,6 +61,8 @@ tests:
   steps:
     dependencies:
       SOURCE_IMAGE_REF: console
+    env:
+      IMAGE_REPO: console
     workflow: ocm-ci-image-mirror
 - as: pr-image-mirror-mce
   steps:
@@ -69,6 +77,7 @@ tests:
     dependencies:
       SOURCE_IMAGE_REF: console
     env:
+      IMAGE_REPO: console
       IMAGE_TAG: latest
     workflow: ocm-ci-image-mirror
 - as: latest-image-mirror-mce
@@ -81,6 +90,12 @@ tests:
       IMAGE_TAG: latest
     workflow: ocm-ci-image-mirror
 - as: fast-forward
+  postsubmit: true
+  steps:
+    env:
+      DESTINATION_BRANCH: release-2.9
+    workflow: ocm-ci-fastforward
+- as: fast-forward-previous
   postsubmit: true
   steps:
     env:

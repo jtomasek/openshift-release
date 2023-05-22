@@ -15,7 +15,7 @@ chain:
         bin/test-e2e \
         -test.v \
         -test.timeout=2h10m \
-        -test.run=TestCreateCluster \
+        -test.run="^TestCreateCluster$" \
         --e2e.platform=PowerVS \
         --e2e.pull-secret-file=/etc/ci-pull-credentials/.dockerconfigjson \
         --e2e.base-domain=hypershift-ppc64le.com \
@@ -47,7 +47,7 @@ chain:
           name: KUBECONFIG
         - default: /etc/hypershift-pool-powervs-credentials/credentials
           name: IBMCLOUD_CREDENTIALS
-      from: test-bin
+      from: hypershift-tests
       grace_period: 30m0s
       resources:
         requests:

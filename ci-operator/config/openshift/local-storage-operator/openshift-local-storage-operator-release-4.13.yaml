@@ -50,7 +50,6 @@ operator:
   - pullspec: quay.io/openshift/origin-local-storage-diskmaker:latest
     with: pipeline:local-storage-diskmaker
 promotion:
-  disabled: true
   name: "4.13"
   namespace: ocp
 releases:
@@ -92,6 +91,10 @@ tests:
         requests:
           cpu: 100m
     workflow: optional-operators-ci-aws
+- as: verify-deps
+  steps:
+    test:
+    - ref: go-verify-deps
 zz_generated_metadata:
   branch: release-4.13
   org: openshift

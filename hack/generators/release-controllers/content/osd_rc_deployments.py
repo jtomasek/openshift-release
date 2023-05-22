@@ -1,5 +1,4 @@
-
-from content.utils import get_rc_volumes, get_rc_volume_mounts, get_kubeconfig_volumes, get_kubeconfig_volume_mounts
+from content.utils import get_rc_volumes, get_rc_volume_mounts, get_rcapi_volume_mounts, get_rcapi_volumes
 
 
 def _add_osd_rc_bootstrap(gendoc):
@@ -223,7 +222,7 @@ def _add_osd_rc_deployment(gendoc):
 
     # Creating Cluster Groups for the AMD64 jobs...
     if context.arch == 'x86_64':
-        extra_rc_args.append('--cluster-group=build01,build02,build03,build05')
+        extra_rc_args.append('--cluster-group=build01,build02,build03,build04,build05')
         extra_rc_args.append('--cluster-group=vsphere')
 
     gendoc.append({
@@ -283,23 +282,24 @@ def _add_osd_rc_deployment(gendoc):
                                         '--plugin-config=/etc/plugins/plugins.yaml',
                                         '--supplemental-plugin-config-dir=/etc/plugins',
                                         '--authentication-message=Pulling these images requires <a href="https://docs.ci.openshift.org/docs/how-tos/use-registries-in-build-farm/">authenticating to the app.ci cluster</a>.',
-                                        f'--art-suffix={context.art_suffix}'
+                                        f'--art-suffix={context.art_suffix}',
+                                        "--process-legacy-results"
                                         ],
                             'image': 'release-controller:latest',
                             'name': 'controller',
                             'volumeMounts': get_rc_volume_mounts(),
                             'livenessProbe': {
                                 'httpGet': {
-                                  'path': '/healthz',
-                                  'port': 8081
+                                    'path': '/healthz',
+                                    'port': 8081
                                 },
                                 'initialDelaySeconds': 3,
                                 'periodSeconds': 3,
                             },
                             'readinessProbe': {
                                 'httpGet': {
-                                  'path': '/healthz/ready',
-                                  'port': 8081
+                                    'path': '/healthz/ready',
+                                    'port': 8081
                                 },
                                 'initialDelaySeconds': 10,
                                 'periodSeconds': 3,
@@ -355,23 +355,26 @@ def _add_osd_rc_deployment(gendoc):
                                         f'--release-architecture={context.get_supported_architecture_name()}',
                                         '-v=6',
                                         '--authentication-message=Pulling these images requires <a href="https://docs.ci.openshift.org/docs/how-tos/use-registries-in-build-farm/">authenticating to the app.ci cluster</a>.',
-                                        f'--art-suffix={context.art_suffix}'
+                                        f'--art-suffix={context.art_suffix}',
+                                        '--enable-jira',
+                                        '--jira-endpoint=https://issues.redhat.com',
+                                        '--jira-bearer-token-file=/etc/jira/api',
                                         ],
                             'image': 'release-controller-api:latest',
                             'name': 'controller',
-                            'volumeMounts': get_kubeconfig_volume_mounts(),
+                            'volumeMounts': get_rcapi_volume_mounts(),
                             'livenessProbe': {
                                 'httpGet': {
-                                  'path': '/healthz',
-                                  'port': 8081
+                                    'path': '/healthz',
+                                    'port': 8081
                                 },
                                 'initialDelaySeconds': 3,
                                 'periodSeconds': 3,
                             },
                             'readinessProbe': {
                                 'httpGet': {
-                                  'path': '/healthz/ready',
-                                  'port': 8081
+                                    'path': '/healthz/ready',
+                                    'port': 8081
                                 },
                                 'initialDelaySeconds': 10,
                                 'periodSeconds': 3,
@@ -379,7 +382,7 @@ def _add_osd_rc_deployment(gendoc):
                             },
                         }],
                     'serviceAccountName': f'release-controller-{context.is_namespace}',
-                    'volumes': get_kubeconfig_volumes(context, secret_name=context.secret_name_tls_api)
+                    'volumes': get_rcapi_volumes(context, secret_name=context.secret_name_tls_api)
                 }
             }
         }

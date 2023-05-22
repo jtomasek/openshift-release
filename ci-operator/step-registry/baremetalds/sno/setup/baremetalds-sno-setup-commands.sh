@@ -13,8 +13,21 @@ source "${SHARED_DIR}/packet-conf.sh"
 echo "Creating Ansible inventory file"
 cat > "${SHARED_DIR}/inventory" <<-EOF
 
-[all]
-${IP} ansible_user=root ansible_ssh_user=root ansible_ssh_private_key_file=${CLUSTER_PROFILE_DIR}/packet-ssh-key ansible_ssh_common_args="-o ConnectTimeout=5 -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -o ServerAliveInterval=90 -o LogLevel=ERROR"
+[primary]
+${IP} ansible_user=root ansible_ssh_user=root ansible_ssh_private_key_file=${CLUSTER_PROFILE_DIR}/packet-ssh-key ansible_ssh_common_args="-o ConnectTimeout=5 -o UserKnownHostsFile=/dev/null -o ServerAliveInterval=90 -o LogLevel=ERROR"
+
+EOF
+
+echo "Creating Ansible configuration file"
+cat > "${SHARED_DIR}/ansible.cfg" <<-EOF
+
+[defaults]
+callback_whitelist = profile_tasks
+host_key_checking = False
+
+verbosity = 2
+stdout_callback = yaml
+bin_ansible_callbacks = True
 
 EOF
 
@@ -113,6 +126,7 @@ echo "${SINGLE_NODE_IP_ADDRESS} ${CLUSTER_API_DOMAIN}" | tee --append /etc/hosts
 for ingress_app in ${INGRESS_APPS[@]}; do
   echo "${SINGLE_NODE_IP_ADDRESS} \${ingress_app}.${CLUSTER_INGRESS_SUB_DOMAIN}" | tee --append /etc/hosts
 done
+echo "export SINGLE_NODE_IP_ADDRESS=${SINGLE_NODE_IP_ADDRESS}" >> /root/config
 
 echo Reloading NetworkManager systemd configuration
 systemctl reload NetworkManager

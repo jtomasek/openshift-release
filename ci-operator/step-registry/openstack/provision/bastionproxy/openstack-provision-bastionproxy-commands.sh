@@ -4,12 +4,8 @@ set -o nounset
 set -o errexit
 set -o pipefail
 
-if [[ "$CONFIG_TYPE" != "proxy" ]]; then
-    if [[ "$ZONES_COUNT" != "0" ]]; then
-      echo "ZONES_COUNT was set to '${ZONES_COUNT}', although CONFIG_TYPE was not set to 'proxy'."
-      exit 1
-    fi
-    echo "Skipping step due to CONFIG_TYPE not being proxy."
+if [[ "$CONFIG_TYPE" != *"proxy"* ]]; then
+    echo "Skipping step due to CONFIG_TYPE not matching proxy."
     exit 0
 fi
 
@@ -39,27 +35,16 @@ MACHINES_SUBNET_ID=$(<"${SHARED_DIR}"/MACHINES_SUBNET_ID)
 OPENSTACK_EXTERNAL_NETWORK="${OPENSTACK_EXTERNAL_NETWORK:-$(<"${SHARED_DIR}/OPENSTACK_EXTERNAL_NETWORK")}"
 BASTION_FLAVOR="${BASTION_FLAVOR:-$(<"${SHARED_DIR}/BASTION_FLAVOR")}"
 BASTION_USER=${BASTION_USER:-cloud-user}
-ZONES=$(<"${SHARED_DIR}"/ZONES)
+API_IP=$(<"${SHARED_DIR}"/API_IP)
+INGRESS_IP=$(<"${SHARED_DIR}"/INGRESS_IP)
 
-mapfile -t ZONES < <(printf ${ZONES}) >/dev/null
-MAX_ZONES_COUNT=${#ZONES[@]}
-
-if [[ ${ZONES_COUNT} -gt ${MAX_ZONES_COUNT} ]]; then
-  echo "Too many zones were requested: ${ZONES_COUNT}; only ${MAX_ZONES_COUNT} are available: ${ZONES[*]}"
-  exit 1
-fi
-
-if [[ "${ZONES_COUNT}" == "0" ]]; then
-  ZONES_ARGS=""
-elif [[ "${ZONES_COUNT}" == "1" ]]; then
-  for ((i=0; i<${MAX_ZONES_COUNT}; ++i )) ; do
-    ZONES_ARGS+="--availability-zone ${ZONES[$i]} "
-  done
-else
-  # For now, we only support a cluster within a single AZ.
-  # This will change in the future.
-  echo "Wrong ZONE_COUNT, can only be 0 or 1, got ${ZONES_COUNT}"
-  exit 1
+if [[ -f "${SHARED_DIR}/squid-credentials.txt" ]]; then
+    echo "A proxy job that has squid-credentials already will need a public floating IP to work in CI, overriding OPENSTACK_EXTERNAL_NETWORK to be the public proxy network."
+    OPENSTACK_EXTERNAL_NETWORK="${OPENSTACK_EXTERNAL_NETWORK}-proxy"
+    if ! openstack network show "${OPENSTACK_EXTERNAL_NETWORK}" >/dev/null; then
+	echo "ERROR: External network for the proxy does not exist: ${OPENSTACK_EXTERNAL_NETWORK}"
+	exit 1
+    fi 
 fi
 
 if ! openstack image show $BASTION_IMAGE >/dev/null; then
@@ -82,9 +67,15 @@ openstack security group rule create --ingress --protocol tcp --dst-port 22 --de
 openstack security group rule create --ingress --protocol udp --dst-port 53 --description "${CLUSTER_NAME} DNS" "$sg_id" >/dev/null
 openstack security group rule create --ingress --protocol tcp --dst-port 3128 --remote-ip 0.0.0.0/0 --description "${CLUSTER_NAME} squid" "$sg_id" >/dev/null
 openstack security group rule create --ingress --protocol tcp --dst-port 3130 --remote-ip 0.0.0.0/0 --description "${CLUSTER_NAME} squid" "$sg_id" >/dev/null
+if [[ "$CONFIG_TYPE" == *"externallb"* ]]; then
+  openstack security group rule create --ingress --protocol tcp --dst-port 6443 --description "OCP API" "$sg_id" >/dev/null
+  openstack security group rule create --ingress --protocol tcp --dst-port 80 --description "OCP Ingress HTTP" "$sg_id" >/dev/null
+  openstack security group rule create --ingress --protocol tcp --dst-port 443 --description "OCP Ingress HTTPS" "$sg_id" >/dev/null
+  openstack security group rule create --ingress --protocol tcp --dst-port 22623 --description "OCP Machine Config Server" "$sg_id" >/dev/null
+fi
 >&2 echo "Created necessary security group rules in ${sg_id}"
 
-server_params=" --image $BASTION_IMAGE --flavor $BASTION_FLAVOR $ZONES_ARGS \
+server_params=" --image $BASTION_IMAGE --flavor $BASTION_FLAVOR \
   --security-group $sg_id --key-name bastionproxy-${CLUSTER_NAME}-${CONFIG_TYPE}"
 
 if [[ -f ${SHARED_DIR}"/BASTION_NET_ID" ]]; then
@@ -113,6 +104,15 @@ echo ${bastion_fip} > ${SHARED_DIR}/BASTION_FIP
 echo ${BASTION_USER} > ${SHARED_DIR}/BASTION_USER
 cp ${SHARED_DIR}/DELETE_FIPS ${ARTIFACT_DIR}
 
+if [[ "${CONFIG_TYPE}" == *"externallb"* ]]; then
+  PROXY_MAC_ADDRESS="$(openstack port show -f value -c mac_address $PROXY_PORT_ID)"
+  echo "Configuring port $PROXY_PORT_ID with allowed addresses $API_IP and $INGRESS_IP"
+  openstack port set --no-allowed-address --allowed-address ip-address=$API_IP,mac-address=$PROXY_MAC_ADDRESS --allowed-address ip-address=$INGRESS_IP,mac-address=$PROXY_MAC_ADDRESS $PROXY_PORT_ID
+  cp ${SHARED_DIR}/BASTION_FIP ${SHARED_DIR}/LB_HOST
+  cp ${SHARED_DIR}/BASTION_USER ${SHARED_DIR}/LB_USER
+fi
+
+
 # configure the local container environment to have the correct SSH configuration
 if ! whoami &> /dev/null; then
     if [[ -w /etc/passwd ]]; then
@@ -138,7 +138,7 @@ echo ${SQUID_AUTH}>${SHARED_DIR}/SQUID_AUTH
 
 MACHINES_GATEWAY_IP=""
 SQUID_IP=$bastion_fip
-if [[ "${CONFIG_TYPE}" == "proxy" ]]; then
+if [[ "${CONFIG_TYPE}" == *"proxy"* ]]; then
   SQUID_IP=$PROXY_INTERFACE
   echo ${PROXY_INTERFACE}>${SHARED_DIR}/PROXY_INTERFACE
   openstack subnet set --no-dns-nameservers --dns-nameserver ${PROXY_INTERFACE} ${MACHINES_SUBNET_ID}
